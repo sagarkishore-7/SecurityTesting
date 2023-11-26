@@ -7,21 +7,34 @@ import random
 
 
 def replace_random_subtree(tree, symbol, subtrees):
+
     def replace_subtree(tree, old_subtree, new_subtree):
-        if tree == old_subtree:
-            return new_subtree
+
+        if tree[1]:
+            if tree == old_subtree:
+                return new_subtree
+            else:
+                new_node = [replace_subtree(child, old_subtree, new_subtree) for child in tree[1]]
+                return (tree[0], new_node)
         else:
-            new_children = [replace_subtree(child, old_subtree, new_subtree) for child in tree[1]]
-            return tree[0], new_children
+            return tree
 
-    possible_subtrees = find_subtrees(tree, symbol)
+    # Find all subtrees in the tree derived from the specified symbol
+    subtrees = find_subtrees(tree, symbol)
 
-    if possible_subtrees:
-        index_to_replace = random.randint(0, len(possible_subtrees) - 1)
+    if subtrees:
+        # Randomly select a subtree from the list of possible subtrees
         replacement_subtree = random.choice(subtrees)
-        modified_tree = replace_subtree(tree, possible_subtrees[index_to_replace], replacement_subtree)
+
+        # Randomly select a subtree in the tree to replace with the new subtree
+        index_to_replace = random.randint(0, len(subtrees) - 1)
+
+        # Replace the selected subtree with the new subtree
+        modified_tree = replace_subtree(tree, subtrees[index_to_replace], replacement_subtree)
+
         return modified_tree
     else:
+        # If no matching subtrees found, return the original tree
         return tree
 
 
