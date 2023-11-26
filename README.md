@@ -1,8 +1,6 @@
 # Automated Debugging
 _______
-Debugging is the process of identifying and removing errors from a given project. Coupled with logging, it becomes a powerful functionality that offers you information about your project and step-by-step highlighting, so that you can be sure it is error-free.
-
-This repository contains exercises from CISPA Helmholtz Center for Information Security to implement a debugger from scratch using Python.
+Software has bugs, and catching bugs can involve lots of effort. This repository addresses this problem by automating software testing, specifically by generating tests automatically. Recent years have seen the development of novel techniques that lead to dramatic improvements in test generation and software testing.  In this repository, we explore these techniques – in theory and in code.
 
 ______________________________________________________________________
 
