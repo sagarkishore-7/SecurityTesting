@@ -1,0 +1,10 @@
+verify.py                               ✓
+exercise_1b.py                          ✓
+solution_1b.txt                         ✓
+solution_1c.txt                         ✓
+exercise_2b.ipynb                       ✓
+exercise_3b.py                          ✓
+solution_3b.txt                         ✓
+
+
+
