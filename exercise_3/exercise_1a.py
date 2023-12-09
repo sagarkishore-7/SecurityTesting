@@ -18,7 +18,7 @@ def find_subtrees(tree, symbol):
     return subtrees
 
 
-result1 = find_subtrees(expr_tree_1, '<integer>')
-result2 = find_subtrees(expr_tree_2, '<integer>')
-print(result1)
-print(result2)
+tree1 = find_subtrees(expr_tree_1, '<integer>')
+tree2 = find_subtrees(expr_tree_2, '<integer>')
+print(tree1)
+print(tree2)
