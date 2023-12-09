@@ -27,6 +27,14 @@ class FunctionCoverageRunner(FunctionRunner):
     
     def __init__(self, function):
         super().__init__(function)
-        
+
     def run_function(self, inp):
-        pass
+        try:
+            with Coverage() as c:
+                output = self.function(inp)
+        except Exception as exception:
+            self.coverage = c.coverage()
+            raise exception
+
+        self.coverage = c.coverage()
+        return output
