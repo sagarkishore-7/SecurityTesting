@@ -1,0 +1,75 @@
+root@8f9c7c87acf1:/libxml2/outputs/fuzzer01/crashes# /libxml2/fuzzer < id:000000,sig:06,src:002952,op:havoc,rep:2
+noname.xml:1: parser error : switching encoding: encoder error
+<??????? xml:id="1#REQUIRED??????????<EUz<U;j-4?<<<<PL/a>.7<<?<<<P.Uz<?<><<P.Z
+^
+noname.xml:1: parser error : Input is not proper UTF-8, indicate encoding !
+Bytes: 0xD9 0xD9 0xD9 0xD9
+<??????? xml:id="1#REQUIRED??????????<EUz<U;j-4?<<<<PL/a>.7<<?<<<P.Uz<?<><<P.Z
+ ^
+encoding error : input conversion failed due to input error, bytes 0x3C 0xD9 0xD9 0xD9
+I/O error : encoder error
+=================================================================
+==35015==ERROR: AddressSanitizer: heap-buffer-overflow on address 0xffff7cd02500 at pc 0x0000004d6efc bp 0xffffd50860f0 sp 0xffffd50860e8
+READ of size 1 at 0xffff7cd02500 thread T0
+    #0 0x4d6ef8 in xmlParseAttValueComplex /libxml2/parser.c:3928:6
+    #1 0x4d6ef8 in xmlParseAttValueInternal /libxml2/parser.c:8713:12
+    #2 0x511dd4 in xmlParseAttribute2 /libxml2/parser.c:8769:15
+    #3 0x511dd4 in xmlParseStartTag2 /libxml2/parser.c:8927:12
+    #4 0x50eccc in xmlParseElement /libxml2/parser.c:9599:16
+    #5 0x51e3a0 in xmlParseDocument /libxml2/parser.c:10354:2
+    #6 0x53a7d8 in xmlDoRead /libxml2/parser.c:14657:5
+    #7 0x53abe8 in xmlReadMemory /libxml2/parser.c:14740:13
+    #8 0x4b9f1c in harness /libxml2/./harness.c:11:18
+    #9 0x4b9f1c in main /libxml2/./harness.c:21:3
+    #10 0xffff80ec5e0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
+    #11 0x4211e8 in _start (/libxml2/fuzzer+0x4211e8)
+
+0xffff7cd02500 is located 0 bytes to the right of 4096-byte region [0xffff7cd01500,0xffff7cd02500)
+allocated by thread T0 here:
+    #0 0x48e08c in malloc (/libxml2/fuzzer+0x48e08c)
+    #1 0x56e378 in xmlBufferCreate /libxml2/tree.c:6892:32
+    #2 0x80d7c8 in xmlSwitchInputEncodingInt /libxml2/parserInternals.c:1230:34
+    #3 0x80cdc4 in xmlSwitchToEncodingInt /libxml2/parserInternals.c:1313:12
+    #4 0x80cdc4 in xmlSwitchEncoding /libxml2/parserInternals.c:1134:12
+    #5 0x51d5fc in xmlParseDocument /libxml2/parser.c:10271:6
+    #6 0x53a7d8 in xmlDoRead /libxml2/parser.c:14657:5
+    #7 0x53abe8 in xmlReadMemory /libxml2/parser.c:14740:13
+    #8 0x4b9f1c in harness /libxml2/./harness.c:11:18
+    #9 0x4b9f1c in main /libxml2/./harness.c:21:3
+    #10 0xffff80ec5e0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
+    #11 0x4211e8 in _start (/libxml2/fuzzer+0x4211e8)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /libxml2/parser.c:3928:6 in xmlParseAttValueComplex
+Shadow bytes around the buggy address:
+  0x200fef9a0450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x200fef9a0460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x200fef9a0470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x200fef9a0480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x200fef9a0490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x200fef9a04a0:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200fef9a04b0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200fef9a04c0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200fef9a04d0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200fef9a04e0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200fef9a04f0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+  Shadow gap:              cc
+==35015==ABORTING
