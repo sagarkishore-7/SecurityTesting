@@ -1,1 +1,8 @@
-00000000: 3c3c 235b 3c2d 0049                      <<#[<-.I
+root@8f9c7c87acf1:/libxml2/outputs2/fuzzer02/crashes# xxd id\:000000\,sig\:06\,src\:000050\,op\:havoc\,rep\:64
+00000000: 2d2d 2c5b 2a2d 0000 00ff ef03 fe00 572a  --,[*-........W*
+00000010: 472d 0000 00ff ef03 fe00 5748 7fff ffff  G-........WH....
+00000020: 455b 7fff fa00 00dd 0049 5d5d 3e54 6d72  E[.......I]]>Tmr
+00000030: 204e 4f43 455b 7dff fa00 00dd 0069 7fff   NOCE[}......i..
+00000040: 3e54 6d72 2065 6e63 6f64 693c 215b 4947  >Tmr encodi<![IG
+00000050: ef03 fe00 572a 472d 0000 00ff ef03 4e4f  ....W*G-......NO
+00000060: 5245 95                                  RE.

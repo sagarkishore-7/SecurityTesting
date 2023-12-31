@@ -1,8 +1,8 @@
-root@8f9c7c87acf1:/libxml2/outputs2/fuzzer02/crashes# /libxml2/fuzzer < id:000000,sig:06,src:000061,op:havoc,rep:2
+root@8f9c7c87acf1:/libxml2/outputs2/fuzzer02/crashes# /libxml2/fuzzer2 < id\:000000\,sig\:06\,src\:000050\,op\:havoc\,rep\:64
 regexp error : failed to compile: End of range is before start of range
 =================================================================
-==84566==ERROR: AddressSanitizer: heap-buffer-overflow on address 0xffffa05007b7 at pc 0x0000004f487c bp 0xffffceb7a8f0 sp 0xffffceb7a8e8
-READ of size 1 at 0xffffa05007b7 thread T0
+==36477==ERROR: AddressSanitizer: heap-buffer-overflow on address 0xffff889007b7 at pc 0x0000004f487c bp 0xffffefcbe450 sp 0xffffefcbe448
+READ of size 1 at 0xffff889007b7 thread T0
     #0 0x4f4878 in xmlFAParsePosCharGroup /libxml2/xmlregexp.c:5071:15
     #1 0x4f11c4 in xmlFAParseCharGroup /libxml2/xmlregexp.c:5110:6
     #2 0x4f02e4 in xmlFAParseCharClass /libxml2/xmlregexp.c:5130:2
@@ -13,34 +13,34 @@ READ of size 1 at 0xffffa05007b7 thread T0
     #7 0x4c34f4 in xmlRegexpCompile /libxml2/xmlregexp.c:5454:5
     #8 0x4b9d78 in harness /libxml2/./harness2.c:12:32
     #9 0x4b9d78 in main /libxml2/./harness2.c:19:3
-    #10 0xffffa452ce0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
-    #11 0x4211e8 in _start (/libxml2/fuzzer+0x4211e8)
+    #10 0xffff8c8cde0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
+    #11 0x4211e8 in _start (/libxml2/fuzzer2+0x4211e8)
 
-0xffffa05007b7 is located 0 bytes to the right of 7-byte region [0xffffa05007b0,0xffffa05007b7)
+0xffff889007b7 is located 0 bytes to the right of 7-byte region [0xffff889007b0,0xffff889007b7)
 allocated by thread T0 here:
-    #0 0x48e08c in malloc (/libxml2/fuzzer+0x48e08c)
+    #0 0x48e08c in malloc (/libxml2/fuzzer2+0x48e08c)
     #1 0x742b5c in xmlStrndup /libxml2/xmlstring.c:45:23
     #2 0x742e1c in xmlStrdup /libxml2/xmlstring.c:71:12
     #3 0x4c31c8 in xmlRegNewParserCtxt /libxml2/xmlregexp.c:692:16
     #4 0x4c31c8 in xmlRegexpCompile /libxml2/xmlregexp.c:5444:12
     #5 0x4b9d78 in harness /libxml2/./harness2.c:12:32
     #6 0x4b9d78 in main /libxml2/./harness2.c:19:3
-    #7 0xffffa452ce0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
-    #8 0x4211e8 in _start (/libxml2/fuzzer+0x4211e8)
+    #7 0xffff8c8cde0c in __libc_start_main (/lib/aarch64-linux-gnu/libc.so.6+0x20e0c)
+    #8 0x4211e8 in _start (/libxml2/fuzzer2+0x4211e8)
 
 SUMMARY: AddressSanitizer: heap-buffer-overflow /libxml2/xmlregexp.c:5071:15 in xmlFAParsePosCharGroup
 Shadow bytes around the buggy address:
-  0x200ff40a00a0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a00b0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a00c0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a00d0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a00e0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-=>0x200ff40a00f0: fa fa 07 fa fa fa[07]fa fa fa fa fa fa fa fa fa
-  0x200ff40a0100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a0110: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a0120: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a0130: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
-  0x200ff40a0140: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff11200a0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff11200b0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff11200c0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff11200d0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff11200e0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+=>0x200ff11200f0: fa fa 07 fa fa fa[07]fa fa fa fa fa fa fa fa fa
+  0x200ff1120100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff1120110: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff1120120: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff1120130: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x200ff1120140: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
 Shadow byte legend (one shadow byte represents 8 application bytes):
   Addressable:           00
   Partially addressable: 01 02 03 04 05 06 07
@@ -61,4 +61,4 @@ Shadow byte legend (one shadow byte represents 8 application bytes):
   Left alloca redzone:     ca
   Right alloca redzone:    cb
   Shadow gap:              cc
-==84566==ABORTING
+==36477==ABORTING
