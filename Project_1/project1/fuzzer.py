@@ -1,5 +1,6 @@
 from fuzzingbook.GrammarFuzzer import EvenFasterGrammarFuzzer
 import grammar
+import random
 
 class Fuzzer:
     def __init__(self):
@@ -12,5 +13,10 @@ class Fuzzer:
         self.fuzzer = EvenFasterGrammarFuzzer(self.grammar)
 
     def fuzz_one_input(self) -> str:
-        # This function should be implemented, but the signature may not change.
-        return self.fuzzer.fuzz()
+        return self.generate_from_grammar(self.grammar, "<start>")
+
+    def generate_from_grammar(self, grammar, key):
+        if key not in grammar:
+            return key
+        expansion = random.choice(grammar[key])
+        return ''.join(self.generate_from_grammar(grammar, token) for token in expansion)
