@@ -44,9 +44,9 @@ class Fuzzer:
 
     def setup_fuzzer(self):
         self.execution_count = 0
-        self.grammar_spec["<start>"] = [("<create_table>", opts(prob=1.0)),
-                                        "<create_index_or_view>",
-                                        "<additional_commands>",
+        self.grammar_spec["<start>"] = [("<create_table_statements>", opts(prob=1.0)),
+                                        "<create_index_or_view_statements>",
+                                        "<additional_statements>",
                                         ]
         self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
 
@@ -54,15 +54,15 @@ class Fuzzer:
         output = self.sql_fuzzer.fuzz()
 
         if 10 <= self.execution_count <= 20:
-            self.grammar_spec["<start>"] = ["<create_table>",
-                                            ("<create_index_or_view>", opts(prob=1.0)),
-                                            "<additional_commands>",
+            self.grammar_spec["<start>"] = ["<create_table_statements>",
+                                            ("<create_index_or_view_statements>", opts(prob=1.0)),
+                                            "<additional_statements>",
                                             ]
             self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
         elif self.execution_count > 20:
-            self.grammar_spec["<start>"] = ["<create_table>",
-                                            "<create_index_or_view>",
-                                            "<additional_commands>",
+            self.grammar_spec["<start>"] = ["<create_table_statements>",
+                                            "<create_index_or_view_statements>",
+                                            "<additional_statements>",
                                             ]
             self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
 
@@ -72,5 +72,5 @@ class Fuzzer:
 # Usage
 if __name__ == "__main__":
     fuzz_instance = Fuzzer()
-    for _ in range(30):
+    for _ in range(30000):
         print(fuzz_instance.fuzz_one_input())

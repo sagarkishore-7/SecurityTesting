@@ -26,29 +26,28 @@ class DBManager:
         self.current_index = ""
         self.column_list = []
 
-    def save_table(self, name):  # store_table_name
+    def save_table(self, name):
         self.active_table = name
 
         if name not in db_tables:
-            # Initialize new table state
             db_tables[name] = {'pk': True, 'columns': ['default_col']}
             return name
         return None
 
-    def save_column(self, name):  # store_column_name
+    def save_column(self, name):
         self.active_column = name
         if self.active_table and name not in db_tables[self.active_table]["columns"]:
             db_tables[self.active_table]["columns"].append(name)
             return name
         return None
 
-    def fetch_indexed_column(self, col_name):  # get_indexed_column_name
+    def fetch_indexed_column(self, col_name):
         if col_name not in db_tables[self.active_table]["columns"]:
             return random.choice(db_tables[self.active_table]["columns"])
         print("Error: Column for indexing not found")
         return None
 
-    def find_foreign_table(self, table_name):  # get_foreign_table_name
+    def find_foreign_table(self, table_name):
         all_tables = list(db_tables.keys())
         if len(all_tables) > 2:
             all_tables.remove(self.active_table)
@@ -58,19 +57,19 @@ class DBManager:
         print("Error: Unable to find foreign table")
         return None
 
-    def fetch_foreign_column(self, col_name):  # get_foreign_column_name
+    def fetch_foreign_column(self, col_name):
         if col_name not in db_tables[self.foreign_table]["columns"]:
             return random.choice(db_tables[self.foreign_table]["columns"])
         print("Error: Foreign column not found")
         return None
 
-    def select_random_column(self, col_name):  # get_random_own_columnn_name
+    def select_random_column(self, col_name):
         if col_name not in db_tables[self.active_table]["columns"]:
             return random.choice(db_tables[self.active_table]["columns"])
         print("Error: Column not found in current table")
         return None
 
-    def remove_table(self, table_name):  # get_drop_table_name
+    def remove_table(self, table_name):
         if table_name in db_tables:
             del db_tables[table_name]
             return table_name
@@ -81,20 +80,24 @@ class DBManager:
         print(f"Current Table State: {db_tables}")
         print(f"Index Status: {db_indexes}")
 
-    def choose_table_for_selection(self, table_name):  # get_selected_table_name
+    def choose_table_for_selection(self, table_name):
         if table_name not in db_tables:
             self.table_for_select = random.choice(list(db_tables.keys()))
             self.active_table = self.table_for_select
             return self.active_table
         return None
 
-    def select_index_column(self, index_name):  # get_selected_index_name
-        if self.active_table and index_name not in db_tables[self.active_table]["columns"]:
-            return random.choice(db_tables[self.active_table]["columns"])
+    def select_index_column(self, index_name):
+        global columns_available
+        if self.active_table and self.active_table in db_tables:
+            columns_available = db_tables[self.active_table]["columns"]
+
+        if index_name not in columns_available:
+            return random.choice(columns_available)
         print("Error: Index column for selection not found")
         return None
 
-    def prepare_table_for_alter(self, table_name):  # get_alter_old_table_name
+    def prepare_table_for_alter(self, table_name):
         if table_name in db_tables:
             self.old_name_for_alter = table_name
             self.active_table = self.old_name_for_alter
@@ -103,7 +106,7 @@ class DBManager:
         self.active_table = self.old_name_for_alter
         return self.active_table
 
-    def rename_table(self, new_name):  # set_alter_new_table_name
+    def rename_table(self, new_name):
         if new_name not in db_tables and self.old_name_for_alter:
             self.new_name_for_alter = new_name
             db_tables[self.new_name_for_alter] = db_tables.pop(self.old_name_for_alter)
@@ -112,7 +115,7 @@ class DBManager:
         print("Error: Table renaming failed")
         return None
 
-    def prepare_column_for_alter(self, column_name):  # get_alter_old_column_name
+    def prepare_column_for_alter(self, column_name):
         global columns_in_table
         if self.active_table:
             columns_in_table = db_tables[self.active_table]["columns"]
@@ -128,64 +131,68 @@ class DBManager:
             print("Error: Invalid table or column for alteration")
             return None
 
-    def rename_column(self, old_name, new_name):  # set_alter_new_column_name
-        if old_name in db_tables[self.active_table]["columns"]:
-            db_tables[self.active_table]["columns"].remove(old_name)
-            db_tables[self.active_table]["columns"].append(new_name)
+    def rename_column(self, new_name):
+        if new_name not in db_tables[self.active_table]["columns"] and self.active_table:
+            self.new_name_for_alter = new_name
+            db_tables[self.active_table]["columns"].append(self.new_name_for_alter)
+            db_tables[self.active_table]["columns"].remove(self.old_column_alter)
             return new_name
         print("Error: Column renaming failed")
         return None
 
-    def add_column(self, col_name):  # alter_add_column
+    def add_column(self, col_name):
         if col_name not in db_tables[self.active_table]["columns"]:
             db_tables[self.active_table]["columns"].append(col_name)
             return col_name
         print("Error: Column already exists")
         return None
 
-    def remove_column(self, col_name):  # alter_drop_column
+    def remove_column(self, col_name):
         if col_name in db_tables[self.active_table]["columns"]:
             db_tables[self.active_table]["columns"].remove(col_name)
             return col_name
         print("Error: Column not found for removal")
         return None
 
-    def select_index_table(self, table_name):  # get_index_table_name
+    def select_index_table(self, table_name):
         if table_name in db_tables:
             self.active_table = table_name
             return table_name
         self.active_table = random.choice(list(db_tables.keys()))
         return self.active_table
 
-    def register_index(self, index_name):  # store_index_name
+    def register_index(self, index_name):
         if index_name not in db_indexes:
             db_indexes[index_name] = {"table": self.active_table, "index_columns": []}
             return index_name
         print("Error: Index already exists")
         return None
 
-    def add_index_column(self, col_name):  # store_index_column_name
-        if col_name not in db_indexes[self.current_index]["index_columns"]:
+    def add_index_column(self, col_name):
+
+        if self.current_index:
+            columns_in_index = db_indexes[self.current_index]["index_columns"]
+
+        if self.current_index and col_name not in columns_in_index:
             db_indexes[self.current_index]["index_columns"].append(col_name)
             return col_name
-        print("Error: Column already indexed")
         return None
 
-    def remove_index(self, index_name):  # get_drop_index_name
+    def remove_index(self, index_name):
         if index_name in db_indexes:
             del db_indexes[index_name]
             return index_name
         print("Error: Index not found")
         return None
 
-    def save_view(self, view_name):  # store_view_name
+    def save_view(self, view_name):
         if view_name not in db_views:
             db_views.append(view_name)
             return view_name
         print("Error: View already exists")
         return None
 
-    def delete_view(self, view_name):  # drop_view_name
+    def delete_view(self, view_name):
         if view_name in db_views:
             db_views.remove(view_name)
             return view_name
@@ -195,133 +202,200 @@ class DBManager:
 
 db_instance = DBManager()
 
-sql_grammar = {
+regex = {
+    "<regex>": ["GLOB", "REGEXP", "MATCH"],
+}
 
-    "<global_regex_match>": ["GLOB", "REGEXP", "MATCH"],
-
-    # HANDLERS GRAMMAR
+# HANDLERS GRAMMAR
+null_handling = {
     "<null_handling>": ["ISNULL", "NOTNULL", "NOT NULL"],
-    "<raise_handling>": ["IGNORE", "ROLLBACK, <error_message>", "ABORT, <error_message>", "FAIL, <error_message>"],
+}
+
+raise_handling = {
+    "<raise_handling>": ["IGNORE", "ROLLBACK, <error_message>",
+                         "ABORT, <error_message>", "FAIL, <error_message>"],
+}
+
+conflict_handling = {
+    "<conflict_handling>": ["ROLLBACK", "ABORT", "FAIL", "IGNORE", "REPLACE"],
+}
+
+literal_value = {
+    "<literal_value>": ["<numeric_literal>", "'<string_literal>'", "NULL", "TRUE", "FALSE",
+                        "CURRENT_TIME", "CURRENT_DATE", "CURRENT_TIMESTAMP"],
+}
+
+foreign_key_handling = {
     "<foreign_key_handling>": ["", "ON DELETE SET NULL", "ON DELETE SET DEFAULT", "ON DELETE CASCADE",
-                               "ON DELETE RESTICT",
+                               "ON DELETE RESTRICT",
                                "ON DELETE NO ACTION", "ON UPDATE SET NULL", "ON UPDATE SET DEFAULT",
                                "ON UPDATE CASCADE",
-                               "ON UPDATE RESTICT",
+                               "ON UPDATE RESTRICT",
                                "ON UPDATE NO ACTION", "DEFERRABLE", "DEFERRABLE INITIALLY DEFERRED",
                                "DEFERRABLE INITIALLY IMMEDIATE",
                                "NOT DEFERRABLE", "NOT DEFERRABLE INITIALLY DEFERRED",
-                               "NOT DEFERRABLE INITALLY DEFERRED",
+                               "NOT DEFERRABLE INITIALLY DEFERRED",
                                "NOT DEFERRABLE INITIALLY IMMEDIATE", ],
+}
 
-    "<deferrable_handling>": ["", "INITIALLY DEFERRED", "INITIALLY IMMEDIATE"],
-    "<handling_1>": ["<table_name>", "<table_function_name> ()", "<table_function_name> (<multiple_expression>)"],
-    "<update_handling>": ["", "OR ABORT", "OR FAIL", "OR IGNORE", "OR REPLACE", "OR ROLLBACK"],
-    "<conflict_handling>": ["ROLLBACK", "ABORT", "FAIL", "IGNORE", "REPLACE"],
+data_type = {
+    "<data_type>": ["TEXT", "INTEGER", "REAL", "BLOB", "NULL"],
+}
 
-    # EXPRESSION GRAMMAR
-    "<NOT>": ["", "NOT"],
+natural_join = {
+    "<natural_join>": ["NATURAL JOIN", "NATURAL LEFT JOIN", "NATURAL RIGHT JOIN",
+                       "NATURAL FULL JOIN", "NATURAL INNER JOIN", "NATURAL LEFT OUTER JOIN",
+                       "NATURAL RIGHT OUTER JOIN", "NATURAL FULL INNER JOIN"],
+}
+
+null_ordering = {
+    "<null_ordering>": ["", "NULLS FIRST", "NULLS LAST"],
+}
+
+order_array = {
+    "<order_array>": ["", "ASC", "DESC"],
+}
+
+# OPERATORS GRAMMAR
+compound_operators = {
+    "<compound_operators>": ["UNION", "UNION ALL", "INTERSECT", "EXCEPT"],
+}
+
+unary_operators = {
+    "<unary_operators>": ["+", "-", "NOT", ],
+}
+
+not_operator = {"<NOT>": ["", "NOT"], }
+
+binary_operators = {
+    "<binary_operators>": ["+", "-", "*", "/", "%",
+                           "=", "<", ">", "!=", ">=", "<=",
+                           "AND", "OR",
+                           "||",
+                           "&", "|", "<<", ">>", ],
+}
+
+digit = {
     "<digit>": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+}
+
+letter = {
     "<letter>": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
                  "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
                  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
                  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-    "<unary_operator>": ["+", "-", "NOT", ],
-    "<binary_operator>": ["+", "-", "*", "/", "%",
-                          "=", "<", ">", "!=", ">=", "<=",
-                          "AND", "OR",
-                          "||",
-                          "&", "|", "<<", ">>", ],
-    "<compound_operator>": ["UNION", "UNION ALL", "INTERSECT", "EXCEPT"],
-    "<literal_value>": ["<numeric_literal>", "'<string_literal>'", "NULL", "TRUE", "FALSE", "CURRENT_TIME",
-                        "CURRENT_DATE", "CURRENT_TIMESTAMP"],
+}
+
+expression = {
     "<expression>": ["<literal_value>",
                      "<table_name_dot><column_name>",
-                     "<unary_operator> <expression>",
-                     "<expression> <binary_operator> <expression>",
+                     "<unary_operators> <expression>",
+                     "<expression> <binary_operators> <expression>",
                      "<function_name> ( <function_arguments> ) <filter_clause> ",
                      "( <multiple_expression> )",
                      "CAST ( <expression> AS <type_name> )",
                      "<expression> COLLATE <collation_name>",
                      "<expression> <NOT> LIKE <expression> <escape_expression>",
-                     "<expression> <NOT> <global_regex_match> <expression>",
+                     "<expression> <NOT> <regex> <expression>",
                      "<expression> <null_handling>",
                      "<expression> IS <NOT> <DISTINCT_FROM> <expression>",
                      "<expression> <NOT> BETWEEN <expression> AND <expression>",
                      "<expression> <NOT> IN <handling_1>",
                      "CASE <expression> <multiple_when_then> <if_else_expression> END",
                      "<raise_function>"],
-    "<data_type>": ["TEXT", "INTEGER", "REAL", "BLOB", "NULL"],
-
-    "<natural_join>": ["NATURAL JOIN", "NATURAL LEFT JOIN", "NATURAL RIGHT JOIN",
-                       "NATURAL FULL JOIN", "NATURAL INNER JOIN", "NATURAL LEFT OUTER JOIN",
-                       "NATURAL RIGHT OUTER JOIN", "NATURAL FULL INNER JOIN"],
-    "<nulls_first_last>": ["", "NULLS FIRST", "NULLS LAST"],
-    "<asc_desc>": ["", "ASC", "DESC"],
-
-    "<schema_name>": ["<string>"],
     "<function_arguments>": ["", "<DISTINCT> <multiple_expression> <order_by_clause>", "*"],
+    "<multiple_expression>": ["<expression>", "<expression>, <multiple_expression>", ],
+    "<order_by_clause>": ["", "ORDER BY <multiple_ordering_term>"],
     "<multiple_ordering_term>": ["<ordering_term>", "<ordering_term>, <multiple_ordering_term>"],
-    "ordering_term": ["<expression> <collate> <asc_desc> <nulls_first_last>"],
+    "<ordering_term>": ["<expression> <collate> <order_array> <null_ordering>"],
+    "ordering_term": ["<expression> <collate> <order_array> <null_ordering>"],
+    "<collate>": ["", "COLLATE <collation_name>"],
     "<filter_clause>": ["", "FILTER ( WHERE <expression> )"],
     "<type_name>": ["<multiple_name> <if_signed_number>"],
     "<multiple_name>": ["<name>", "<name> <multiple_name>"],
     "<if_signed_number>": ["", "( <signed_number> )", "( <signed_number>, <signed_number>)"],
+    "<signed_number>": ["<numeric_literal>", "+<numeric_literal>", "-<numeric_literal>"],
     "<escape_expression>": ["", "ESCAPE <expression>"],
-    "<multiple_when_then>": ["WHEN <expression> THEN <expression>"],
+    "<handling_1>": ["<table_name>", "<table_function_name> ()", "<table_function_name> (<multiple_expression>)"],
+    "<multiple_when_then>": ["WHEN <expression> THEN <expression>", ],
     "<if_else_expression>": ["", "ELSE <expression>"],
     "<raise_function>": ["RAISE (<raise_handling>)"],
     "<DISTINCT_FROM>": ["", "DISTINCT FROM"],
     "<DISTINCT>": ["", "DISTINCT"],
     "<EXISTS>": ["", "<EXISTS>"],
+    "<collation_name>": ["<string>"],
     "<function_name>": ["<string>"],
     "<table_function_name>": ["<string>"],
+    "<string_literal>": ["<string>"],
     "<name>": ["<string>"],
     "<table_name_dot>": ["", "<string>."],
+    "<column_name>": ["<string>"],
     "<table_name>": ["<string>"],
     "<error_message>": ["<string>"],
-    "<simple_function_invocation>": ["SELECT <simple_func>()",
-                                     "SELECT <simple_func>(*)",
-                                     ("SELECT <simple_func>(<multiple_expression>)",
-                                      opts(order=[1, 2])
-                                      )],
+    "<numeric_literal>": ["<digits>"],
+    "<digits>": ["<digit>", "<digit><digits>"],
+    "<string>": ["<letter>", "<letter><string>"],
+    **order_array,
+    **null_ordering,
+    **not_operator,
+    **regex,
+    **null_handling,
+    **raise_handling,
+    **digit,
+    **letter,
+    **unary_operators,
+    **binary_operators,
+    **literal_value,
+}
+
+invoke_function = {
+    "<invoke_function>": ["SELECT <functions>()",
+                          "SELECT <functions>(*)",
+                          ("SELECT <functions>(<multiple_expression>)",
+                           opts(order=[1, 2])
+                           )],
     "<multiple_expression>": ["<expression>", "<expression>, <multiple_expression>", ],
-    "<simple_func>": ["abs", "changes", "char", "coalesce", "concat", "concat_ws", "format", "glob", "hex",
-                      "ifnull", "iif", "instr", "last_insert_rowid", "length", "like", "like", "likelihood",
-                      "likely", "load_extension", "load_extension", "lower", "ltrim", "ltrim", "max", "min",
-                      "nullif", "octet_length", "printf", "quote", "random", "randomblob", "replace", "round",
-                      "round", "rtrim", "rtrim", "sign", "soundex", "sqlite_compileoption_get",
-                      "sqlite_compileoption_used", "sqlite_offset", "sqlite_source_id", "sqlite_version",
-                      "substr", "substr", "substring", "substring", "total_changes", "trim", "trim", "typeof",
-                      "unhex", "unhex", "unicode", "unlikely", "upper", "zeroblob"
-                      ],
-    "<date_time_functions>": [("SELECT date(<time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2])
-                               ),
-                              ("SELECT time(<time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2])
-                               ),
-                              ("SELECT datetime(<time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2])
-                               ),
-                              ("SELECT julianday(<time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2])
-                               ),
-                              ("SELECT unixepoch(<time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2])
-                               ),
-                              ("SELECT strftime(<multiple_date_format>, <time_value>, <multiple_date_modifier>)",
-                               opts(order=[1, 2, 3])
-                               ),
-                              ("SELECT timediff(<c_time_value>, <c_time_value>)",
-                               opts(order=[1, 2])
-                               )],
-    "<time_value>": ["", "<year>-<month>-<d_date>",
-                     "<year>-<month>-<d_date> <hour>:<minutes>", "<year>-<month>-<d_date> <hour>:<minutes>:<seconds>",
-                     "<year>-<month>-<d_date> <hour>:<minutes>:<seconds>.<seconds><digit>",
-                     "<year>-<month>-<d_date>T<hour>:<minutes>", "<year>-<month>-<d_date>T<hour>:<minutes>:<seconds>",
-                     "<year>-<month>-<d_date>T<hour>:<minutes>:<seconds>.<seconds><digit>",
+    "<functions>": ["abs", "changes", "char", "coalesce", "concat", "concat_ws", "format", "glob", "hex",
+                    "ifnull", "iif", "instr", "last_insert_rowid", "length", "like", "like", "likelihood",
+                    "likely", "load_extension", "load_extension", "lower", "ltrim", "ltrim", "max", "min",
+                    "nullif", "octet_length", "printf", "quote", "random", "randomblob", "replace", "round",
+                    "round", "rtrim", "rtrim", "sign", "soundex", "sqlite_compileoption_get",
+                    "sqlite_compileoption_used", "sqlite_offset", "sqlite_source_id", "sqlite_version",
+                    "substr", "substr", "substring", "substring", "total_changes", "trim", "trim", "typeof",
+                    "unhex", "unhex", "unicode", "unlikely", "upper", "zeroblob"
+                    ],
+    **expression,
+}
+
+datetime_options = {
+    "<datetime_options>": [("SELECT date(<time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2])
+                            ),
+                           ("SELECT time(<time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2])
+                            ),
+                           ("SELECT datetime(<time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2])
+                            ),
+                           ("SELECT julianday(<time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2])
+                            ),
+                           ("SELECT unixepoch(<time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2])
+                            ),
+                           ("SELECT strftime(<multiple_date_formats>, <time_value>, <multiple_date_modifier>)",
+                            opts(order=[1, 2, 3])
+                            ),
+                           ("SELECT timediff(<c_time_value>, <c_time_value>)",
+                            opts(order=[1, 2])
+                            )],
+    "<time_value>": ["", "<year>-<month>-<date>",
+                     "<year>-<month>-<date> <hour>:<minutes>", "<year>-<month>-<date> <hour>:<minutes>:<seconds>",
+                     "<year>-<month>-<date> <hour>:<minutes>:<seconds>.<seconds><digit>",
+                     "<year>-<month>-<date>T<hour>:<minutes>", "<year>-<month>-<date>T<hour>:<minutes>:<seconds>",
+                     "<year>-<month>-<date>T<hour>:<minutes>:<seconds>.<seconds><digit>",
                      "<hour>:<minutes>", "<hour>:<minutes>:<seconds>", "<hour>:<minutes>:<seconds>.<seconds>digit",
-                     "now", "<d_date><d_date><d_date><d_date><d_date>"
+                     "now", "<date><date><date><date><date>"
                      ],
     "<multiple_date_modifier>": ["<date_modifier>", "<date_modifier>, <multiple_date_modifier>"],
     "<date_modifier>": ["+<digit><digit> days", "-<digit><digit> days",
@@ -333,33 +407,37 @@ sql_grammar = {
                         "+<hour>:<minutes>", "-<hour>:<minutes>",
                         "+<hour>:<minutes>:<seconds>", "-<hour>:<minutes>:<seconds>",
                         "+<hour>:<minutes>:<seconds>.<seconds><digit>", "-<hour>:<minutes>:<seconds>.<seconds><digit>",
-                        "+<year>-<month>-<d_date>", "-<year>-<month>-<d_date>",
-                        "+<year>-<month>-<d_date> <hour>:<minutes>", "-<year>-<month>-<d_date> <hour>:<minutes>",
-                        "+<year>-<month>-<d_date> <hour>:<minutes>:<seconds>",
-                        "-<year>-<month>-<d_date> <hour>:<minutes>:<seconds>",
-                        "+<year>-<month>-<d_date> <hour>:<minutes>:<seconds>.<seconds><digit>",
-                        "-<year>-<month>-<d_date> <hour>:<minutes>:<seconds>.<seconds><digit>",
+                        "+<year>-<month>-<date>", "-<year>-<month>-<date>",
+                        "+<year>-<month>-<date> <hour>:<minutes>", "-<year>-<month>-<date> <hour>:<minutes>",
+                        "+<year>-<month>-<date> <hour>:<minutes>:<seconds>",
+                        "-<year>-<month>-<date> <hour>:<minutes>:<seconds>",
+                        "+<year>-<month>-<date> <hour>:<minutes>:<seconds>.<seconds><digit>",
+                        "-<year>-<month>-<date> <hour>:<minutes>:<seconds>.<seconds><digit>",
                         "start of month", "start of year", "start of day", "weekday <digit>", "unixepoch", "julianday",
                         "auto", "localtime", "utc", "subsec", "subsecond",
                         ],
-    "<multiple_date_format>": ["<date_format>", "<date_format> <multiple_date_format>"],
-    "<date_format>": ["%/d", "%/e", "%/f", "%/F", "%H", "%I", "%j", "%J", "%k", "%l", "%m", "%M", "%p",
-                      "%P", "%R", "%/s", "%S", "%T", "%T", "%/u", "%w", "%W", "%Y", "%/%/"],
+    "<multiple_date_formats>": ["<date_formats>", "<date_formats> <multiple_date_formats>"],
+    "<date_formats>": ["%/d", "%/e", "%/f", "%/F", "%H", "%I", "%j", "%J", "%k", "%l", "%m", "%M", "%p",
+                       "%P", "%R", "%/s", "%S", "%T", "%T", "%/u", "%w", "%W", "%Y", "%/%/"],
 
-    "<c_time_value>": ["<year>-<month>-<d_date>",
-                       "<year>-<month>-<d_date> <hour>:<minutes>", "<year>-<month>-<d_date> <hour>:<minutes>:<seconds>",
-                       "<year>-<month>-<d_date> <hour>:<minutes>:<seconds>.<seconds><digit>",
-                       "<year>-<month>-<d_date>T<hour>:<minutes>", "<year>-<month>-<d_date>T<hour>:<minutes>:<seconds>",
-                       "<year>-<month>-<d_date>T<hour>:<minutes>:<seconds>.<seconds><digit>",
+    "<c_time_value>": ["<year>-<month>-<date>",
+                       "<year>-<month>-<date> <hour>:<minutes>", "<year>-<month>-<date> <hour>:<minutes>:<seconds>",
+                       "<year>-<month>-<date> <hour>:<minutes>:<seconds>.<seconds><digit>",
+                       "<year>-<month>-<date>T<hour>:<minutes>", "<year>-<month>-<date>T<hour>:<minutes>:<seconds>",
+                       "<year>-<month>-<date>T<hour>:<minutes>:<seconds>.<seconds><digit>",
                        "<hour>:<minutes>", "<hour>:<minutes>:<seconds>", "<hour>:<minutes>:<seconds>.<seconds>digit",
-                       "now", "<d_date><d_date><d_date><d_date><d_date>",
+                       "now", "<date><date><date><date><date>",
                        ],
     "<year>": ["<digit><digit><digit><digit>"],
     "<month>": ["<digit><digit>"],
-    "<d_date>": ["<digit><digit>"],
+    "<date>": ["<digit><digit>"],
     "<hour>": ["<digit><digit>"],
     "<minutes>": ["<digit><digit>"],
     "<seconds>": ["<digit><digit>"],
+    **digit,
+}
+
+create_virtual_table_statement = {
     "<create_virtual_table_statement>": [("CREATE VIRTUAL TABLE <virtual_table_name> USING <virtual_module_name>",
                                           opts(order=[1, 2])
                                           ),
@@ -383,12 +461,27 @@ sql_grammar = {
         ("<virtual_column_name> <column_type> DEFAULT <default_literal_or_number> <virtual_column_constraint>",
          opts(order=[1, 2, 3, 4])
          )],
+    "<column_type>": ["", "TEXT", "NUM", "INTEGER", "REAL"],
+    "<default_literal_or_number>": ["<literal_value>", "<signed_number>", ],
+    "<signed_number>": ["<numeric_literal>", "+<numeric_literal>", "-<numeric_literal>"],
     "<virtual_column_constraint>": ["NOT NULL <conflict_clause>",
                                     "UNIQUE <conflict_clause>",
                                     "COLLATE <collation_name>", ],
+    "<conflict_clause>": ["", "ON CONFLICT <conflict_handling>"],
     "<virtual_table_name>": ["<string>"],
     "<virtual_module_name>": ["<string>"],
     "<virtual_column_name>": ["<string>"],
+    "<collation_name>": ["<string>"],
+    "<numeric_literal>": ["<digits>"],
+    "<digits>": ["<digit>", "<digit><digits>"],
+    "<string>": ["<letter>", "<letter><string>"],
+    **literal_value,
+    **conflict_handling,
+    **digit,
+    **letter,
+}
+
+create_index_statement = {
     "<create_index_statement>": [("CREATE INDEX <index_name> ON <index_table_name> (<multiple_indexed_columns>)",
                                   opts(order=[2, 1, 3])
                                   ),
@@ -420,194 +513,48 @@ sql_grammar = {
                                      opts(order=[2, 1, 3, 4])
                                  ),
                                  ],
+    "<index_name>": [("<string>",
+                      opts(post=lambda index_name: db_instance.register_index(index_name))
+                      )],
     "<multiple_indexed_columns>": ["<index_column_name>",
                                    ("<index_column_name>, <multiple_indexed_columns>", opts(order=[1, 2]))],
     "<index_table_name>": [("<string>",
                             opts(post=lambda index_table_name: db_instance.select_index_table(index_table_name))
                             )],
     "<index_column_name>": [("<string>",
-                             opts(post=lambda index_column_name: db_instance.fetch_indexed_column(index_column_name))
+                             opts(post=lambda index_column_name: db_instance.add_index_column(index_column_name))
                              )],
-    "<multiple_result_column>": ["<result_column>",
-                                 ("<result_column>, <multiple_result_column>",
-                                  opts(order=[1, 2])
-                                  )],
-    "<alter_table_statement>": [("ALTER TABLE <alter_old_table_name> RENAME TO <alter_new_table_name>",
-                                 opts(order=[1, 2])
-                                 ),
-                                (
-                                    "ALTER TABLE <alter_old_table_name> RENAME COLUMN <alter_old_column_name> TO <alter_new_column_name>",
-                                    opts(order=[1, 2, 3])
-                                ),
-                                ("ALTER TABLE <alter_old_table_name> ADD COLUMN <alter_column_definition>",
-                                 opts(order=[1, 2])
-                                 ),
-                                ("ALTER TABLE <alter_old_table_name> DROP COLUMN <alter_drop_column_name>",
-                                 opts(order=[1, 2])
-                                 ),
-                                ],
-    "<alter_column_definition>": [
-        ("<alter_column_name> <column_type> DEFAULT <default_literal_or_number> <column_constraint>",
-         opts(order=[1, 2, 3, 4])
-         )],
-    "<column_constraint>": ["NOT NULL <conflict_clause>",
-                            "UNIQUE <conflict_clause>",
-                            "COLLATE <collation_name>",
-                            ],
-    "<alter_drop_column_name>": [("<string>",
-                                  opts(post=lambda drop_column_name: db_instance.remove_column(drop_column_name))
-                                  )],
-    "<alter_new_table_name>": [("<string>",
-                                opts(post=lambda alter_table_name: db_instance.rename_table(alter_table_name))
-                                )],
-    "<alter_old_table_name>": [("<string>",
-                                opts(
-                                    post=lambda alter_table_name: db_instance.prepare_table_for_alter(alter_table_name))
-                                )],
-    "<alter_old_column_name>": [("<string>",
-                                 opts(post=lambda alter_column_name: db_instance.prepare_column_for_alter(
-                                     alter_column_name))
-                                 )],
-    "<alter_new_column_name>": [("<string>",
-                                 opts(post=lambda alter_column_name: db_instance.rename_column(alter_column_name))
-                                 )],
-    "<alter_column_name>": [("<string>",
-                             opts(post=lambda alter_column_name: db_instance.add_column(alter_column_name))
-                             )],
-    "<delete_statement>": ["DELETE FROM <delete_qualified_table_name>",
-                           "DELETE FROM <delete_qualified_table_name> WHERE <expression>"],
-    "<delete_qualified_table_name>": ["<delete_table_name> <indexed>",
-                                      "<delete_table_name> AS <alias>"],
-    "<delete_table_name>": ["<string>"],
-    "<alias>": ["<string>"],
-    "<indexed>": ["", "INDEXED BY <index_name>", "NOT INDEXED"],
-    "<index_name>": ["<string>"],
-    "<drop_index_statement>": ["DROP INDEX <drop_index_name>",
-                               "DROP INDEX IF EXISTS <drop_index_name>",
-                               ],
-    "<drop_index_name>": [("<string>",
-                           opts(post=lambda drop_index_name: db_instance.remove_index(drop_index_name))
-                           )],
-    "<drop_table_statement>": ["DROP TABLE <drop_table_name>",
-                               "DROP TABLE IF EXISTS <drop_table_name>",
-                               ],
-    "<drop_table_name>": [("<string>",
-                           opts(post=lambda drop_table_name: db_instance.remove_table(drop_table_name))
-                           )],
-    "<drop_view_statement>": ["DROP TABLE <view_name>",
-                              "DROP TABLE IF EXISTS <view_name>",
-                              ],
-    "<pragma_statement>": ["PRAGMA <pragma_name>",
-                           "PRAGMA <pragma_name> = <pragma_value>",
-                           "PRAGMA <pragma_name> (<pragma_value>)",
-                           ],
-    "<pragma_value>": ["<signed_number>"],
-    "<pragma_name>": ["analysis_limit", "application_id", "auto_vacuum", "automatic_index", "busy_timeout",
-                      "cache_size", "cache_spill", "cell_size_check", "checkpoint_fullfsync", "collation_list",
-                      "compile_handling", "data_version", "database_list", "defer_foreign_keys", "encoding",
-                      "foreign_key_check", "foreign_key_list", "foreign_keys", "freelist_count", "fullfsync",
-                      "function_list", "hard_heap_limit", "ignore_check_constraints", "incremental_vacuum",
-                      "index_info", "index_list", "index_xinfo", "integrity_check", "journal_mode",
-                      "journal_size_limit", "legacy_alter_table", "legacy_file_format", "locking_mode",
-                      "max_page_count", "mmap_size", "module_list", "optimize", "page_count", "page_size",
-                      "pragma_list", "query_only", "quick_check", "read_uncommitted", "recursive_triggers",
-                      "reverse_unordered_selects", "secure_delete", "shrink_memory", "soft_heap_limit", "synchronous",
-                      "table_info", "table_list", "table_xinfo", "temp_store", "threads", "trusted_schema",
-                      "user_version", "wal_autocheckpoint", "wal_checkpoint"],
-    "<update_statement>": [
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <from_clause>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <where_clause>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <from_clause> <where_clause>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <from_clause>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <where_clause>",
-        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <from_clause> <where_clause>",
-        ],
-    "<update_qualified_table_name>": ["<update_table_name>",
-                                      "<update_table_name> AS <update_alias>",
-                                      "<update_table_name> INDEXED BY <update_index_name>",
-                                      "<update_table_name> AS <update_alias> INDEXED BY <update_index_name>",
-                                      "<update_table_name> NOT INDEXED",
-                                      "<update_table_name> AS <update_alias> NOT INDEXED"],
-    "<update_column_list>": ["(<multiple_update_column_name>)"],
-    "<multiple_update_column_name>": ["<update_column_name>", "<update_column_name>, <multiple_update_column_name>"],
-    "<update_table_or_subquery>": ["<update_table_name>",
-                                   ("<update_table_name> <update_alias>",
-                                    opts(order=[1, 2])
-                                    ),
-                                   ("<update_table_name> AS <update_alias>",
-                                    opts(order=[1, 2])
-                                    ),
-                                   ("<update_table_name> INDEXED BY <update_index_name>",
-                                    opts(order=[1, 2])
-                                    ),
-                                   ("<update_table_name> <update_alias> INDEXED BY <update_index_name>",
-                                    opts(order=[1, 3, 2])
-                                    ),
-                                   ("<update_table_name> AS <update_alias> INDEXED BY <update_index_name>",
-                                    opts(order=[1, 3, 2])
-                                    ),
-                                   "<update_table_name> NOT INDEXED",
-                                   ("<update_table_name> <update_alias> NOT INDEXED",
-                                    opts(order=[1, 2])
-                                    ),
-                                   ("<update_table_name> AS <update_alias> NOT INDEXED",
-                                    opts(order=[1, 2])
-                                    ),
-                                   "(<update_table_or_subquery>)",
-                                   "(<join_clause>)"],
-    "<having_expression>": ["HAVING <expression>"],
-    "<update_table_name>": [("<string>",
-                             opts(post=lambda u_table_name: db_instance.choose_table_for_selection(u_table_name))
-                             )],
-    "<update_alias>": ["<string>"],
-    "<update_index_name>": ["<string>"],
-    "<update_column_name>": ["<string>"],
-    "<create_view_statement>": [("CREATE VIEW <view_name> AS <select_statement>",
-                                 opts(order=[1, 2])
-                                 ),
-                                ("CREATE VIEW IF NOT EXISTS <view_name> AS <select_statement>",
-                                 opts(order=[1, 2])
-                                 ),
-                                ("CREATE VIEW <view_name> (<multiple_view_column>) AS <select_statement>",
-                                 opts(order=[1, 2, 3])
-                                 ),
-                                ("CREATE VIEW IF NOT EXISTS <view_name> (<multiple_view_column>) AS <select_statement>",
-                                 opts(order=[1, 2, 3])
-                                 ),
-                                ],
-    "<view_name>": [("<string>",
-                     opts(post=lambda view_name: db_instance.save_view(view_name))
-                     )],
-    "<multiple_view_column>": ["<view_column>", ("<view_column>, <multiple_view_column>", opts(order=[1, 2]))],
-    "<view_column>": ["<string>"],
+    "<string>": ["<letter>", "<letter><string>"],
+    **expression,
+    **letter,
+
+}
+
+create_table_statement = {
     "<create_table_statement>": [("CREATE TABLE <table_table_name> <column_def_table_constraint>",
                                   opts(order=[1, 2])
                                   ),
                                  ("CREATE TABLE IF NOT EXISTS <table_table_name> <column_def_table_constraint>",
                                   opts(order=[1, 2])
                                   ),
-                                 #    "CREATE TEMP TABLE IF NOT EXISTS <table_name> <column_def_table_constraint>",
-                                 #    "CREATE TEMPORARY TABLE IF NOT EXISTS <table_name> <column_def_table_constraint>",
-                                 #    "CREATE TEMP TABLE <table_name> <column_def_table_constraint>",
-                                 #    "CREATE TEMPORARY TABLE <table_name> <column_def_table_constraint>",
                                  ],
     "<column_def_table_constraint>": [
-        ("(col1 INTEGER PRIMARY KEY AUTOINCREMENT, <multiple_column_definiton>, <table_constraint>)",
+        ("(col1 INTEGER PRIMARY KEY AUTOINCREMENT, <multiple_column_definition>, <table_constraint>)",
          opts(order=[1, 2])
          )],
-    "<multiple_column_definiton>": ["<column_definiton>",
-                                    ("<column_definiton>, <multiple_column_definiton>",
-                                     opts(order=[1, 2])
-                                     )],
-    "<column_definiton>": [("<table_column_name> <column_type> DEFAULT <default_literal_or_number> <column_constraint>",
-                            opts(order=[1, 2, 3, 4])
-                            )],
-    "<column_constraint_create_table>": ["NOT NULL <conflict_clause>",
-                                         "UNIQUE <conflict_clause>",
-                                         "COLLATE <collation_name_create_table>",
-                                         ],
+    "<multiple_column_definition>": ["<column_definition>",
+                                     ("<column_definition>, <multiple_column_definition>",
+                                      opts(order=[1, 2])
+                                      )],
+    "<column_definition>": [
+        ("<table_column_name> <column_type> DEFAULT <default_literal_or_number> <column_constraint>",
+         opts(order=[1, 2, 3, 4])
+         )],
+    "<column_constraint>": [
+        "NOT NULL <conflict_clause>",
+        "UNIQUE <conflict_clause>",
+        "COLLATE <collation_name>",
+    ],
     "<default_literal_or_number>": ["<literal_value>", "<signed_number>", ],
     "<signed_number>": ["<numeric_literal>", "+<numeric_literal>", "-<numeric_literal>"],
     "<table_constraint>": [("UNIQUE (<indexed_column>) <conflict_clause>",
@@ -616,7 +563,7 @@ sql_grammar = {
                            "CHECK (<expression>)", ],
     "<conflict_clause>": ["", "ON CONFLICT <conflict_handling>"],
     "<multiple_column_name>": ["<column_name>, ", "<column_name><multiple_column_name>"],
-    "<collation_name_create_table>": ["BINARY", "RTRIM", "NOCASE"],
+    "<collation_name>": ["BINARY", "RTRIM", "NOCASE"],
     "<column_type>": ["", "TEXT", "NUM", "INTEGER", "REAL"],
     "<indexed_column>": [
         ("<string>", opts(post=lambda index_column_name: db_instance.fetch_indexed_column(index_column_name)))],
@@ -626,23 +573,35 @@ sql_grammar = {
     "<table_column_name>": [("<string>",
                              opts(post=lambda column_name: db_instance.save_column(column_name))
                              )],
+    "<string>": ["<letter>", "<letter><string>"],
     "<column_name>": ["<string>"],
     "<string_literal>": ["<string>"],
     "<numeric_literal>": ["<digits>"],
     "<digits>": ["<digit>", "<digit><digits>"],
+    **order_array,
+    **conflict_handling,
+    **expression,
+    **not_operator,
+    **data_type,
+    **literal_value,
+    **letter,
+    **digit,
+}
+
+select_statement = {
     "<select_statement>": [("<select_core> <order_or_limit>",
                             opts(order=[1, 2])
                             ),
-                           ("<select_core> <compound_operator> <select_statement>",
+                           ("<select_core> <compound_operators> <select_statement>",
                             opts(order=[1, 2, 3])
                             )],
-    "<select_core>": [("SELECT <multipleresult_column> <from_clause> <where_clause> <group_by_clause>",
+    "<select_core>": [("SELECT <multiple_result_column> <from_clause> <where_clause> <group_by_clause>",
                        opts(order=[1, 2, 3, 4])
                        ),
-                      ("SELECT DISTINCT <multipleresult_column> <from_clause> <where_clause> <group_by_clause>",
+                      ("SELECT DISTINCT <multiple_result_column> <from_clause> <where_clause> <group_by_clause>",
                        opts(order=[1, 2, 3, 4])
                        ),
-                      ("SELECT ALL <multipleresult_column> <from_clause> <where_clause> <group_by_clause>",
+                      ("SELECT ALL <multiple_result_column> <from_clause> <where_clause> <group_by_clause>",
                        opts(order=[1, 2, 3, 4])
                        ),
                       ("SELECT <aggregate_functions>(<select_index_name>) FROM <select_table_name>",
@@ -652,15 +611,19 @@ sql_grammar = {
                        opts(order=[1, 2, 3])
                        ),
                       ],
+    **natural_join,
+    **order_array,
+    **null_ordering,
+    **compound_operators,
+    **expression,
+    **letter,
     "<aggregate_functions>": ["sum", "avg", "count", "min", "max", "total", ],
     "<order_or_limit>": ["", "<order_by_clause>", "<order_by_clause> <limit_clause>", "<limit_clause>", ],
-    "<multipleresult_column>": ["<result_column>",
-                                ("<result_column>, <multipleresult_column>",
-                                 opts(order=[1, 2])
-                                 )],
-    "<result_column>": [
-        "*",
-        "<select_table_name>.*"],
+    "<multiple_result_column>": ["<result_column>",
+                                 ("<result_column>, <multiple_result_column>",
+                                  opts(order=[1, 2])
+                                  )],
+    "<result_column>": ["*", "<select_table_name>.*"],
     "<from_clause>": ["", "FROM <select_table_or_subquery>", "FROM <join_clause>"],
     "<select_table_or_subquery>": ["<select_table_name>",
                                    ("<select_table_name> <table_alias>",
@@ -688,25 +651,28 @@ sql_grammar = {
                                    "(<select_table_or_subquery>)",
                                    "(<join_clause>)"],
     "<join_clause>": ["<select_table_or_subquery>",
-                      ("<select_table_or_subquery> <join_operator> <select_table_or_subquery> <join_constraint>",
+                      ("<select_table_or_subquery> <join_operators> <select_table_or_subquery> <join_constraint>",
                        opts(order=[1, 2, 3, 4])
                        ),
                       ],
-    "<join_operator>": [",", "JOIN", "<natural_join>", "CROSS JOIN"],
-    "<join_constraint>": ["ON <expression>",],
+    "<join_operators>": [",", "JOIN", "<natural_join>", "CROSS JOIN"],
+    "<join_constraint>": ["ON <expression>", ],
     "<where_clause>": ["", "WHERE <expression>", "WHERE <expression> <having_expression>"],
-    "<group_by_clause>": ["", "GROUP BY <multipleexpression>", "GROUP BY <multipleexpression> <having_expression>"],
-    "<multipleexpression>": ["<expression>", "<expression>, <multipleexpression>"],
+    "<group_by_clause>": ["", "GROUP BY <multiple_expression>", "GROUP BY <multiple_expression> <having_expression>"],
+    "<multiple_expression>": ["<expression>", "<expression>, <multiple_expression>"],
     "<having_expression>": ["HAVING <expression>"],
-    "<order_by_clause>": ["ORDER BY <multipleordering_term>"],
-    "<multipleordering_term>": ["<ordering_term>", "<ordering_term>, <multipleordering_term>"],
-    "<ordering_term>": ["<expression>", "<expression> <collate>", "<expression> <collate> <asc_desc> <nulls_first_last>"],
+    "<order_by_clause>": ["ORDER BY <multiple_ordering_term>"],
+    "<multiple_ordering_term>": ["<ordering_term>", "<ordering_term>, <multiple_ordering_term>"],
+    "<ordering_term>": ["<expression>", "<expression> <collate>",
+                        "<expression> <collate> <order_array> <null_ordering>"],
     "<collate>": ["COLLATE <collation_name>"],
-    "<limit_clause>": ["LIMIT <expression>", "LIMIT <expression> OFFSET <expression>", "LIMIT <expression> , <expression>"],
+    "<limit_clause>": ["LIMIT <expression>", "LIMIT <expression> OFFSET <expression>",
+                       "LIMIT <expression> , <expression>"],
     "<table_alias>": ["", "<string>"],
     "<column_alias>": ["<string>"],
     "<select_table_name>": [("<string>",
-                             opts(post=lambda select_table_name: db_instance.choose_table_for_selection(select_table_name))
+                             opts(post=lambda select_table_name: db_instance.choose_table_for_selection(
+                                 select_table_name))
                              )],
     "<select_table_function_name>": ["<string>"],
     "<select_index_name>": [("<string>",
@@ -714,24 +680,259 @@ sql_grammar = {
                              )],
     "<collation_name>": ["<string>"],
     "<string>": ["<letter>", "<letter><string>"],
+}
+
+create_view_statement = {
+    "<create_view_statement>": [("CREATE VIEW <view_name> AS <select_statement>",
+                                 opts(order=[1, 2])
+                                 ),
+                                ("CREATE VIEW IF NOT EXISTS <view_name> AS <select_statement>",
+                                 opts(order=[1, 2])
+                                 ),
+                                ("CREATE VIEW <view_name> (<multiple_view_column>) AS <select_statement>",
+                                 opts(order=[1, 2, 3])
+                                 ),
+                                ("CREATE VIEW IF NOT EXISTS <view_name> (<multiple_view_column>) AS <select_statement>",
+                                 opts(order=[1, 2, 3])
+                                 ),
+                                ],
+    **select_statement,
+    "<view_name>": [("<string>",
+                     opts(post=lambda view_name: db_instance.save_view(view_name))
+                     )],
+    "<multiple_view_column>": ["<view_column>", ("<view_column>, <multiple_view_column>", opts(order=[1, 2]))],
+    "<view_column>": ["<string>"],
+
+}
+
+alter_table_statement = {
+    "<alter_table_statement>": [("ALTER TABLE <alter_old_table_name> RENAME TO <alter_new_table_name>",
+                                 opts(order=[1, 2])
+                                 ),
+                                (
+                                    "ALTER TABLE <alter_old_table_name> RENAME COLUMN <alter_old_column_name> TO <alter_new_column_name>",
+                                    opts(order=[1, 2, 3])
+                                ),
+                                ("ALTER TABLE <alter_old_table_name> ADD COLUMN <alter_column_definition>",
+                                 opts(order=[1, 2])
+                                 ),
+                                ("ALTER TABLE <alter_old_table_name> DROP COLUMN <remove_column_name>",
+                                 opts(order=[1, 2])
+                                 ),
+                                ],
+    **digit,
+    **foreign_key_handling,
+    **literal_value,
+    **conflict_handling,
+    **letter,
+    "<alter_column_definition>": [
+        ("<alter_column_name> <column_type> DEFAULT <default_literal_or_number> <column_constraint>",
+         opts(order=[1, 2, 3, 4])
+         )],
+    "<column_constraint>": ["NOT NULL <conflict_clause>",
+                            "UNIQUE <conflict_clause>",
+                            "COLLATE <collation_name>",
+                            ],
+    "<default_literal_or_number>": ["<literal_value>", "<signed_number>", ],
+    "<conflict_clause>": ["", "ON CONFLICT <conflict_handling>"],
+    "<signed_number>": ["<numeric_literal>", "+<numeric_literal>", "-<numeric_literal>"],
+    "<column_type>": ["", "TEXT", "NUM", "INTEGER", "REAL"],
+    "<remove_column_name>": [("<string>",
+                              opts(post=lambda drop_column_name: db_instance.remove_column(drop_column_name))
+                              )],
+    "<alter_new_table_name>": [("<string>",
+                                opts(post=lambda alter_table_name: db_instance.rename_table(alter_table_name))
+                                )],
+    "<alter_old_table_name>": [("<string>",
+                                opts(
+                                    post=lambda alter_table_name: db_instance.prepare_table_for_alter(alter_table_name))
+                                )],
+    "<alter_old_column_name>": [("<string>",
+                                 opts(post=lambda alter_column_name: db_instance.prepare_column_for_alter(
+                                     alter_column_name))
+                                 )],
+    "<alter_new_column_name>": [("<string>",
+                                 opts(post=lambda alter_column_name: db_instance.rename_column(alter_column_name))
+                                 )],
+    "<alter_column_name>": [("<string>",
+                             opts(post=lambda alter_column_name: db_instance.add_column(alter_column_name))
+                             )],
+    "<collation_name>": ["<string>"],
+    "<numeric_literal>": ["<digits>"],
+    "<string>": ["<letter>", "<letter><string>"],
+    "<digits>": ["<digit>", "<digit><digits>"],
+
+}
+
+delete_statement = {
+    "<delete_statement>": ["DELETE FROM <delete_qualified_table_name>",
+                           "DELETE FROM <delete_qualified_table_name> WHERE <expression>"],
+    **expression,
+    **letter,
+    "<delete_qualified_table_name>": ["<delete_table_name> <indexed>",
+                                      "<delete_table_name> AS <alias>"],
+    "<delete_table_name>": ["<string>"],
+    "<alias>": ["<string>"],
+    "<indexed>": ["", "INDEXED BY <index_name>", "NOT INDEXED"],
+    "<index_name>": ["<string>"],
+    "<string>": ["<letter>", "<letter><string>"],
+
+}
+
+drop_index_statement = {
+    "<drop_index_statement>": ["DROP INDEX <drop_index_name>",
+                               "DROP INDEX IF EXISTS <drop_index_name>",
+                               ],
+    **letter,
+    "<drop_index_name>": [("<string>",
+                           opts(post=lambda drop_index_name: db_instance.remove_index(drop_index_name))
+                           )],
+    "<string>": ["<letter>", "<letter><string>"],
+
+}
+
+drop_table_statement = {
+    "<drop_table_statement>": ["DROP TABLE <drop_table_name>",
+                               "DROP TABLE IF EXISTS <drop_table_name>",
+                               ],
+    **letter,
+    "<drop_table_name>": [("<string>",
+                           opts(post=lambda drop_table_name: db_instance.remove_table(drop_table_name))
+                           )],
+    "<string>": ["<letter>", "<letter><string>"],
+
+}
+
+drop_view_statement = {
+    "<drop_view_statement>": ["DROP TABLE <view_name>",
+                              "DROP TABLE IF EXISTS <view_name>",
+                              ],
+    **letter,
+    "<view_name>": [("<string>",
+                     opts(post=lambda view_name: db_instance.delete_view(view_name))
+                     )],
+    "<string>": ["<letter>", "<letter><string>"],
+
+}
+
+pragma_statement = {
+    "<pragma_statement>": ["PRAGMA <pragma_name>",
+                           "PRAGMA <pragma_name> = <pragma_value>",
+                           "PRAGMA <pragma_name> (<pragma_value>)",
+                           ],
+    **digit,
+    "<pragma_value>": ["<signed_number>", ],
+    "<pragma_name>": ["analysis_limit", "application_id", "auto_vacuum", "automatic_index", "busy_timeout",
+                      "cache_size", "cache_spill", "cell_size_check", "checkpoint_fullfsync", "collation_list",
+                      "compile_handling", "data_version", "database_list", "defer_foreign_keys", "encoding",
+                      "foreign_key_check", "foreign_key_list", "foreign_keys", "freelist_count", "fullfsync",
+                      "function_list", "hard_heap_limit", "ignore_check_constraints", "incremental_vacuum",
+                      "index_info", "index_list", "index_xinfo", "integrity_check", "journal_mode",
+                      "journal_size_limit", "legacy_alter_table", "legacy_file_format", "locking_mode",
+                      "max_page_count", "mmap_size", "module_list", "optimize", "page_count", "page_size",
+                      "pragma_list", "query_only", "quick_check", "read_uncommitted", "recursive_triggers",
+                      "reverse_unordered_selects", "secure_delete", "shrink_memory", "soft_heap_limit", "synchronous",
+                      "table_info", "table_list", "table_xinfo", "temp_store", "threads", "trusted_schema",
+                      "user_version", "wal_autocheckpoint", "wal_checkpoint"],
+    "<signed_number>": ["<numeric_literal>", "+<numeric_literal>", "-<numeric_literal>"],
+    "<numeric_literal>": ["<digits>"],
+    "<digits>": ["<digit>", "<digit><digits>"],
+
+}
+
+update_statement = {
+    "<update_statement>": [
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <from_clause>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <where_clause>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_name> = <expression> <from_clause> <where_clause>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <from_clause>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <where_clause>",
+        "UPDATE <update_handling> <update_qualified_table_name> SET <update_column_list> = <expression> <from_clause> <where_clause>",
+    ],
+    **expression,
+    **natural_join,
+    "<update_handling>": ["", "OR ABORT", "OR FAIL", "OR IGNORE", "OR REPLACE", "OR ROLLBACK"],
+    "<update_qualified_table_name>": ["<update_table_name>",
+                                      "<update_table_name> AS <update_alias>",
+                                      "<update_table_name> INDEXED BY <update_index_name>",
+                                      "<update_table_name> AS <update_alias> INDEXED BY <update_index_name>",
+                                      "<update_table_name> NOT INDEXED",
+                                      "<update_table_name> AS <update_alias> NOT INDEXED"],
+    "<update_column_list>": ["(<multiple_update_column_name>)"],
+    "<multiple_update_column_name>": ["<update_column_name>", "<update_column_name>, <multiple_update_column_name>"],
+    "<from_clause>": ["FROM <update_table_or_subquery>", "FROM <join_clause>"],
+    "<update_table_or_subquery>": ["<update_table_name>",
+                                   ("<update_table_name> <update_alias>",
+                                    opts(order=[1, 2])
+                                    ),
+                                   ("<update_table_name> AS <update_alias>",
+                                    opts(order=[1, 2])
+                                    ),
+                                   ("<update_table_name> INDEXED BY <update_index_name>",
+                                    opts(order=[1, 2])
+                                    ),
+                                   ("<update_table_name> <update_alias> INDEXED BY <update_index_name>",
+                                    opts(order=[1, 3, 2])
+                                    ),
+                                   ("<update_table_name> AS <update_alias> INDEXED BY <update_index_name>",
+                                    opts(order=[1, 3, 2])
+                                    ),
+                                   "<update_table_name> NOT INDEXED",
+                                   ("<update_table_name> <update_alias> NOT INDEXED",
+                                    opts(order=[1, 2])
+                                    ),
+                                   ("<update_table_name> AS <update_alias> NOT INDEXED",
+                                    opts(order=[1, 2])
+                                    ),
+                                   "(<update_table_or_subquery>)",
+                                   "(<join_clause>)"],
+    "<join_clause>": ["<update_table_or_subquery>",
+                      ("<update_table_or_subquery> <join_operators> <update_table_or_subquery> <join_constraint>",
+                       opts(order=[1, 2, 3, 4])
+                       ),
+                      ],
+    "<join_operators>": [",", "JOIN", "<natural_join>", "CROSS JOIN"],
+    "<join_constraint>": ["ON <expression>"],
+    "<where_clause>": ["WHERE <expression>", "WHERE <expression> <having_expression>"],
+    "<having_expression>": ["HAVING <expression>"],
+    "<update_table_name>": [("<string>",
+                             opts(post=lambda u_table_name: db_instance.choose_table_for_selection(u_table_name))
+                             )],
+    "<update_alias>": ["<string>"],
+    "<update_index_name>": ["<string>"],
+    "<update_column_name>": ["<string>"],
 
 }
 
 sql_fuzz_grammar = {
-    "<start>": ["<create_table>", "<create_index_or_view>", "<additional_commands>"],
+    "<start>": ["<create_table_statements>", "<create_index_or_view_statements>", "<additional_statements>"],
 
-    "<create_table>": ["<create_table_statement>", ],
-    "<create_index_or_view>": ["<create_index_statement>", "<create_view_statement>",
-                               "<create_virtual_table_statement>"
-                               ],
-    "<additional_commands>": ["<select_statement>", "<alter_table_statement>", "<delete_statement>"
-                                                                               "<pragma_statement>",
-                              "<simple_function_invocation>",
-                              "<date_time_functions>",
-                              "<drop_index_statement>", "<drop_table_statement>", "<drop_view_statement>"
-                              ],
+    "<create_table_statements>": ["<create_table_statement>", ],
+    "<create_index_or_view_statements>": ["<create_index_statement>", "<create_view_statement>",
+                                          "<create_virtual_table_statement>"
+                                          ],
+    "<additional_statements>": ["<select_statement>", "<alter_table_statement>", "<delete_statement>"
+                                                                                 "<pragma_statement>",
+                                "<invoke_function>",
+                                "<datetime_options>",
+                                "<drop_index_statement>", "<drop_table_statement>", "<drop_view_statement>"
+                                ],
 
-    **sql_grammar,
+    **create_table_statement,
+    **create_index_statement,
+    **create_view_statement,
+    **create_virtual_table_statement,
+    **select_statement,
+    **alter_table_statement,
+    **delete_statement,
+    **pragma_statement,
+    **invoke_function,
+    **datetime_options,
+    **drop_index_statement,
+    **drop_table_statement,
+    **drop_view_statement,
 }
 
 grammar = trim_grammar(sql_fuzz_grammar)
