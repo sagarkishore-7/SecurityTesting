@@ -1,41 +1,55 @@
 from fuzzingbook.GrammarFuzzer import GrammarFuzzer
-from fuzzingbook.GeneratorGrammarFuzzer import ProbabilisticGeneratorGrammarFuzzer, opts
+from fuzzingbook.GeneratorGrammarFuzzer import ProbabilisticGeneratorGrammarFuzzer, opts, exp_order
 from grammar import DBManager, grammar
 from fuzzingbook.Grammars import trim_grammar
 
 # Instantiate the database for the SQL fuzzer
 custom_db = DBManager()
 
+
 class EnhancedGrammarFuzzer(ProbabilisticGeneratorGrammarFuzzer):
 
-    def create_tree(self):
-        # Override to generate a complete tree with applied constraints
+    def fuzz_tree(self):
         while True:
-            syntax_tree = super().fuzz_tree()
-            return syntax_tree
+            tree = GrammarFuzzer.fuzz_tree(self)
+            return tree
 
-    def pick_expansion(self, node, children_to_expand):
-        # Decide which child node to expand based on the grammar's order
-        (nonterminal, children) = node
-        assert isinstance(children, list)
+    def choose_tree_expansion(self, tree, children_to_expand):
+        """Choose a subtree from `children_to_expand` for expansion. Default behavior is random selection."""
+
+        (symbol, tree_children) = tree
+        assert isinstance(tree_children, list)
 
         if len(children_to_expand) == 1:
-            return super().choose_tree_expansion(node, children_to_expand)
+            return GrammarFuzzer.choose_tree_expansion(self, tree, children_to_expand)
 
-        chosen_expansion = self.get_chosen_expansion(node)
-        order_of_expansion = opts(chosen_expansion)
-        if order_of_expansion is None:
-            return super().choose_tree_expansion(node, children_to_expand)
+        chosen_expansion = self.find_expansion(tree)
+        specified_order = exp_order(chosen_expansion)
+        if specified_order is None:
+            return GrammarFuzzer.choose_tree_expansion(self, tree, children_to_expand)
 
-        # Iterate to find the child with the lowest expansion order
-        chosen_child = None
-        for i, child in enumerate(children_to_expand):
-            child_order = order_of_expansion(child)
-            if chosen_child is None or child_order < order_of_expansion(chosen_child):
-                chosen_child = i
+        expandable_nonterminals = [c for c in tree_children if c[1] != []]
+        assert len(expandable_nonterminals) == len(specified_order), "Order must have one element for each non-terminal"
 
-        assert chosen_child is not None
-        return chosen_child
+        # Search for the expandable child with the lowest order
+        lowest_order_index = None
+        index = 0
+        for i, child_to_expand in enumerate(children_to_expand):
+            while index < len(expandable_nonterminals) and child_to_expand != expandable_nonterminals[index]:
+                index += 1
+            assert index < len(expandable_nonterminals), "Child to expand not found in non-terminals"
+            if self.log:
+                print(f"Expandable child #{i} {child_to_expand[0]} is ordered at {specified_order[index]}")
+
+            if lowest_order_index is None or specified_order[index] < specified_order[lowest_order_index]:
+                lowest_order_index = i
+
+        assert lowest_order_index is not None
+
+        if self.log:
+            print(f"Selected expandable child #{lowest_order_index} {children_to_expand[lowest_order_index][0]}")
+        return lowest_order_index
+
 
 class Fuzzer:
     def __init__(self):
@@ -44,30 +58,31 @@ class Fuzzer:
 
     def setup_fuzzer(self):
         self.execution_count = 0
-        self.grammar_spec["<start>"] = [("<create_table_statements>", opts(prob=1.0)),
-                                        "<create_index_or_view_statements>",
-                                        "<additional_statements>",
+        self.grammar_spec["<start>"] = [("<ddl_statements-1>", opts(prob=1.0)),
+                                        "<ddl_statements-2>",
+                                        "<dml_statements>",
                                         ]
         self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
 
     def fuzz_one_input(self) -> str:
         output = self.sql_fuzzer.fuzz()
 
-        if 10 <= self.execution_count <= 20:
-            self.grammar_spec["<start>"] = ["<create_table_statements>",
-                                            ("<create_index_or_view_statements>", opts(prob=1.0)),
-                                            "<additional_statements>",
+        if 5 <= self.execution_count <= 15:
+            self.grammar_spec["<start>"] = ["<ddl_statements-1>",
+                                            ("<ddl_statements-2>", opts(prob=1.0)),
+                                            "<dml_statements>",
                                             ]
             self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
-        elif self.execution_count > 20:
-            self.grammar_spec["<start>"] = ["<create_table_statements>",
-                                            "<create_index_or_view_statements>",
-                                            "<additional_statements>",
+        elif self.execution_count > 15:
+            self.grammar_spec["<start>"] = ["<ddl_statements-1>",
+                                            "<ddl_statements-2>",
+                                            "<dml_statements>",
                                             ]
             self.sql_fuzzer = EnhancedGrammarFuzzer(trim_grammar(self.grammar_spec))
 
         self.execution_count += 1
         return output
+
 
 # Usage
 if __name__ == "__main__":
